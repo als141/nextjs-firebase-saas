@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { Stripe } from 'stripe'
-import { stripe } from '@/lib/stripe/stripe'
+import { stripe } from '@/lib/stripe/stripe-admin'
 import { adminDb, adminAuth } from '@/lib/firebase/firebase-admin'
 import { Timestamp } from 'firebase-admin/firestore'
+import { InvoiceData } from '@/lib/firebase/firestore-types'
 
 // Webhookシークレットキー
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
@@ -11,7 +12,8 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 export async function POST(req: Request) {
   try {
     const body = await req.text()
-    const signature = headers().get('stripe-signature')
+    const headersList = await headers()
+    const signature = headersList.get('stripe-signature')
 
     if (!signature || !webhookSecret) {
       return NextResponse.json(
@@ -259,6 +261,9 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       updatedAt: Timestamp.now(),
     })
     
+    // Invoice型にlast_payment_errorプロパティを追加するための型アサーション
+    const invoiceWithError = invoice as unknown as InvoiceData
+    
     // 請求書情報を保存
     await adminDb.collection('invoices').doc(invoice.id).set({
       id: invoice.id,
@@ -271,7 +276,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       periodStart: invoice.period_start ? Timestamp.fromMillis(invoice.period_start * 1000) : null,
       periodEnd: invoice.period_end ? Timestamp.fromMillis(invoice.period_end * 1000) : null,
       created: Timestamp.fromMillis(invoice.created * 1000),
-      failureMessage: invoice.last_payment_error?.message,
+      failureMessage: invoiceWithError.last_payment_error?.message,
     })
     
     console.log(`Invoice ${invoice.id} payment failed for subscription ${subscriptionId}`)

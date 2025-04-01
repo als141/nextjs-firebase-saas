@@ -23,7 +23,8 @@ export async function POST(req: Request) {
     })
 
     // セキュアなクッキーを設定
-    cookies().set('session', sessionCookie, {
+    const cookiesStore = await cookies()
+    await cookiesStore.set('session', sessionCookie, {
       maxAge: expiresIn,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -44,7 +45,8 @@ export async function POST(req: Request) {
 // セッションの検証API
 export async function GET() {
   try {
-    const sessionCookie = cookies().get('session')?.value
+    const cookiesStore = await cookies()
+    const sessionCookie = (await cookiesStore.get('session'))?.value
 
     if (!sessionCookie) {
       return NextResponse.json(
@@ -76,7 +78,8 @@ export async function GET() {
 export async function DELETE() {
   try {
     // セッションクッキーを削除
-    cookies().delete('session')
+    const cookiesStore = await cookies()
+    await cookiesStore.delete('session')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('セッション削除エラー:', error)

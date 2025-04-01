@@ -7,7 +7,8 @@ import { getStripeCustomerId, createStripeCustomer } from '@/lib/stripe/stripe-a
 export async function POST(req: Request) {
   try {
     // セッションクッキーを取得
-    const sessionCookie = cookies().get('session')?.value
+    const cookiesStore = await cookies()
+    const sessionCookie = (await cookiesStore.get('session'))?.value
 
     if (!sessionCookie) {
       return NextResponse.json(

@@ -10,6 +10,11 @@ export interface UserData {
   createdAt: Timestamp
   updatedAt: Timestamp
   stripeCustomerId?: string
+  // メール通知設定
+  emailNotifications?: boolean
+  marketingEmails?: boolean
+  securityEmails?: boolean
+  updatesEmails?: boolean
   // 追加のユーザープロファイル情報
   phoneNumber?: string
   address?: {
@@ -37,6 +42,7 @@ export interface SubscriptionData {
   canceledAt: Timestamp | null
   trialStart: Timestamp | null
   trialEnd: Timestamp | null
+  customerId?: string
 }
 
 // 製品情報の型
@@ -81,4 +87,22 @@ export interface UserSubscriptionInfo {
   isBusiness: boolean
   plan: string | null
   subscription: SubscriptionData | null
+}
+
+// Stripeインボイス型
+export interface InvoiceData {
+  id: string
+  customerId?: string
+  subscriptionId: string
+  status: string
+  total: number
+  subtotal: number
+  currency: string
+  periodStart: Timestamp | null
+  periodEnd: Timestamp | null
+  created: Timestamp
+  last_payment_error?: {
+    message?: string
+  }
+  failureMessage?: string
 }

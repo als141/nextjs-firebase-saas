@@ -1,5 +1,68 @@
-import { stripe } from '@/lib/stripe/stripe'
+import Stripe from 'stripe'
 import { adminDb } from '@/lib/firebase/firebase-admin'
+import { getStripe } from './stripe'
+
+// Stripe APIの初期化
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+if (!stripeSecretKey) {
+  console.error('Missing STRIPE_SECRET_KEY')
+}
+
+export const stripe = new Stripe(stripeSecretKey || '', {
+  apiVersion: '2025-02-24.acacia', // 最新の API バージョンを使用
+})
+
+// 価格プラン定義
+export const PLANS = [
+  {
+    id: 'free',
+    name: '無料プラン',
+    description: '個人の利用に最適',
+    price: 0,
+    priceId: '',
+    interval: 'month' as const,
+    features: [
+      '3つまでのプロジェクト',
+      'コミュニティサポート',
+      '基本的な機能',
+    ],
+  },
+  {
+    id: 'pro',
+    name: 'プロプラン',
+    description: 'プロフェッショナルのニーズに',
+    price: 2000,
+    priceId: 'price_pro_monthly', // 実際のStripe価格IDに置き換えてください
+    interval: 'month' as const,
+    features: [
+      '無制限のプロジェクト',
+      '優先サポート',
+      'すべての機能にアクセス',
+      'API使用権',
+      'チーム機能',
+    ],
+    popular: true,
+  },
+  {
+    id: 'business',
+    name: 'ビジネスプラン',
+    description: 'チームと大規模組織向け',
+    price: 5000,
+    priceId: 'price_business_monthly', // 実際のStripe価格IDに置き換えてください
+    interval: 'month' as const,
+    features: [
+      '無制限のプロジェクト',
+      '24時間サポート',
+      'すべての機能にアクセス',
+      '高度なAPI使用権',
+      '拡張チーム機能',
+      'カスタム統合',
+    ],
+  },
+]
+
+// クライアントサイド用のgetStripe関数をフロントエンドでも使用できるようにエクスポート
+export { getStripe }
 
 // ユーザーのStripeカスタマーIDを取得する関数
 export async function getStripeCustomerId(userId: string): Promise<string | null> {
